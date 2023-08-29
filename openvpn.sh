@@ -2,7 +2,6 @@
 # shellcheck disable=SC1091,SC2164,SC2034,SC1072,SC1073,SC1009
 
 # Secure OpenVPN server installer for Debian, Ubuntu, CentOS, Amazon Linux 2, Fedora, Oracle Linux 8, Arch Linux, Rocky Linux and AlmaLinux.
-# https://github.com/angristan/openvpn-install
 
 function isRoot() {
 	if [ "$EUID" -ne 0 ]; then
@@ -1218,17 +1217,17 @@ function removeUnbound() {
 		rm -rf /etc/unbound/
 
 		echo ""
-		echo "Unbound removed!"
+		echo "Unbound видалено!"
 	else
 		systemctl restart unbound
 		echo ""
-		echo "Unbound wasn't removed."
+		echo "Unbound не вдалося видалити."
 	fi
 }
 
 function removeOpenVPN() {
 	echo ""
-	read -rp "Do you really want to remove OpenVPN? [y/n]: " -e -i n REMOVE
+	read -rp "Ви дійсно хочете видалити OpenVPN? [y/n]: " -e -i n REMOVE
 	if [[ $REMOVE == 'y' ]]; then
 		# Get OpenVPN port from the configuration
 		PORT=$(grep '^port ' /etc/openvpn/server.conf | cut -d " " -f 2)
@@ -1295,26 +1294,25 @@ function removeOpenVPN() {
 			removeUnbound
 		fi
 		echo ""
-		echo "OpenVPN removed!"
+		echo "OpenVPN видалено!"
 	else
 		echo ""
-		echo "Removal aborted!"
+		echo "Видалення скасовано!"
 	fi
 }
 
 function manageMenu() {
-	echo "Welcome to OpenVPN-install!"
-	echo "The git repository is available at: https://github.com/angristan/openvpn-install"
+	echo "Вітаємо в майстрі встановлення OpenVPN-install!"
 	echo ""
-	echo "It looks like OpenVPN is already installed."
+	echo "Схоже, що OpenVPN вже встановлено."
 	echo ""
-	echo "What do you want to do?"
-	echo "   1) Add a new user"
-	echo "   2) Revoke existing user"
-	echo "   3) Remove OpenVPN"
-	echo "   4) Exit"
+	echo "Що ви хочете зробити?"
+	echo "   1) Додати нового користувача"
+	echo "   2) Видалити існуючого користувача"
+	echo "   3) Видалити OpenVPN"
+	echo "   4) Вийти"
 	until [[ $MENU_OPTION =~ ^[1-4]$ ]]; do
-		read -rp "Select an option [1-4]: " MENU_OPTION
+		read -rp "Оберіть дію [1-4]: " MENU_OPTION
 	done
 
 	case $MENU_OPTION in
