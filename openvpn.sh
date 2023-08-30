@@ -1,7 +1,8 @@
 #!/bin/bash
 # shellcheck disable=SC1091,SC2164,SC2034,SC1072,SC1073,SC1009
 
-# Secure OpenVPN server installer for Debian, Ubuntu, CentOS, Amazon Linux 2, Fedora, Oracle Linux 8, Arch Linux, Rocky Linux and AlmaLinux.
+# Скрипт для встановлення OpenVPN server для Debian, Ubuntu, CentOS, Amazon Linux 2, Fedora, Oracle Linux 8, Arch Linux, Rocky Linux та AlmaLinux.
+
 
 function isRoot() {
 	if [ "$EUID" -ne 0 ]; then
@@ -22,12 +23,12 @@ function checkOS() {
 
 		if [[ $ID == "debian" || $ID == "raspbian" ]]; then
 			if [[ $VERSION_ID -lt 9 ]]; then
-				echo "⚠️ Your version of Debian is not supported."
+				echo "⚠️ Ваша версія Debian не підтримується."
 				echo ""
-				echo "However, if you're using Debian >= 9 or unstable/testing then you can continue, at your own risk."
+				echo "Однак, якщо ви використовуєте Debian >= 9 чи unstable/testing тоді ви можете продовжити на свій страх і ризик."
 				echo ""
 				until [[ $CONTINUE =~ (y|n) ]]; do
-					read -rp "Continue? [y/n]: " -e CONTINUE
+					read -rp "Продовжити? [y/n]: " -e CONTINUE
 				done
 				if [[ $CONTINUE == "n" ]]; then
 					exit 1
@@ -37,12 +38,12 @@ function checkOS() {
 			OS="ubuntu"
 			MAJOR_UBUNTU_VERSION=$(echo "$VERSION_ID" | cut -d '.' -f1)
 			if [[ $MAJOR_UBUNTU_VERSION -lt 16 ]]; then
-				echo "⚠️ Your version of Ubuntu is not supported."
+				echo "⚠️ Ваша версія Ubuntu не підтримується."
 				echo ""
-				echo "However, if you're using Ubuntu >= 16.04 or beta, then you can continue, at your own risk."
+				echo "Однак, якщо ви використовуєте Ubuntu >= 16.04 чи beta, тоді ви можете продовжити на свій страх і ризик."
 				echo ""
 				until [[ $CONTINUE =~ (y|n) ]]; do
-					read -rp "Continue? [y/n]: " -e CONTINUE
+					read -rp "Продовжити? [y/n]: " -e CONTINUE
 				done
 				if [[ $CONTINUE == "n" ]]; then
 					exit 1
@@ -57,9 +58,9 @@ function checkOS() {
 		if [[ $ID == "centos" || $ID == "rocky" || $ID == "almalinux" ]]; then
 			OS="centos"
 			if [[ $VERSION_ID -lt 7 ]]; then
-				echo "⚠️ Your version of CentOS is not supported."
+				echo "⚠️ Ваша версія CentOS не підтримується."
 				echo ""
-				echo "The script only support CentOS 7 and CentOS 8."
+				echo "TДоступна підтримка CentOS 7 та CentOS 8."
 				echo ""
 				exit 1
 			fi
@@ -67,18 +68,18 @@ function checkOS() {
 		if [[ $ID == "ol" ]]; then
 			OS="oracle"
 			if [[ ! $VERSION_ID =~ (8) ]]; then
-				echo "Your version of Oracle Linux is not supported."
+				echo "Ваша версія Oracle Linux не підтримується."
 				echo ""
-				echo "The script only support Oracle Linux 8."
+				echo "Доступна підтримка Oracle Linux 8."
 				exit 1
 			fi
 		fi
 		if [[ $ID == "amzn" ]]; then
 			OS="amzn"
 			if [[ $VERSION_ID != "2" ]]; then
-				echo "⚠️ Your version of Amazon Linux is not supported."
+				echo "⚠️ Ваша версія Amazon Linux не підтримується."
 				echo ""
-				echo "The script only support Amazon Linux 2."
+				echo "Доступна підтримка Amazon Linux 2."
 				echo ""
 				exit 1
 			fi
@@ -86,31 +87,31 @@ function checkOS() {
 	elif [[ -e /etc/arch-release ]]; then
 		OS=arch
 	else
-		echo "Looks like you aren't running this installer on a Debian, Ubuntu, Fedora, CentOS, Amazon Linux 2, Oracle Linux 8 or Arch Linux system"
+		echo "Схоже, ви запустили цей інсталятор не у системах Debian, Ubuntu, Fedora, CentOS, Amazon Linux 2, Oracle Linux 8 або Arch Linux"
 		exit 1
 	fi
 }
 
 function initialCheck() {
 	if ! isRoot; then
-		echo "Sorry, you need to run this as root"
+		echo "Вибачте, для виконання цієї операції у вас повинні бути права root"
 		exit 1
 	fi
 	if ! tunAvailable; then
-		echo "TUN is not available"
+		echo "TUN недоступний на сервері"
 		exit 1
 	fi
 	checkOS
 }
 
 function installUnbound() {
-	# If Unbound isn't installed, install it
+	# Якщо Unbound не встановлено, встановимо його
 	if [[ ! -e /etc/unbound/unbound.conf ]]; then
 
 		if [[ $OS =~ (debian|ubuntu) ]]; then
 			apt-get install -y unbound
 
-			# Configuration
+			# Конфігурація
 			echo 'interface: 10.8.0.1
 access-control: 10.8.0.1/24 allow
 hide-identity: yes
@@ -121,7 +122,7 @@ prefetch: yes' >>/etc/unbound/unbound.conf
 		elif [[ $OS =~ (centos|amzn|oracle) ]]; then
 			yum install -y unbound
 
-			# Configuration
+			# Конфігурація
 			sed -i 's|# interface: 0.0.0.0$|interface: 10.8.0.1|' /etc/unbound/unbound.conf
 			sed -i 's|# access-control: 127.0.0.0/8 allow|access-control: 10.8.0.1/24 allow|' /etc/unbound/unbound.conf
 			sed -i 's|# hide-identity: no|hide-identity: yes|' /etc/unbound/unbound.conf
@@ -131,7 +132,7 @@ prefetch: yes' >>/etc/unbound/unbound.conf
 		elif [[ $OS == "fedora" ]]; then
 			dnf install -y unbound
 
-			# Configuration
+			# Конфігурація
 			sed -i 's|# interface: 0.0.0.0$|interface: 10.8.0.1|' /etc/unbound/unbound.conf
 			sed -i 's|# access-control: 127.0.0.0/8 allow|access-control: 10.8.0.1/24 allow|' /etc/unbound/unbound.conf
 			sed -i 's|# hide-identity: no|hide-identity: yes|' /etc/unbound/unbound.conf
@@ -185,10 +186,10 @@ private-address: fe80::/10
 private-address: 127.0.0.0/8
 private-address: ::ffff:0:0/96" >>/etc/unbound/unbound.conf
 		fi
-	else # Unbound is already installed
+	else # Unbound вже встановлено
 		echo 'include: /etc/unbound/openvpn.conf' >>/etc/unbound/unbound.conf
 
-		# Add Unbound 'server' for the OpenVPN subnet
+		# додавання Unbound 'server' для OpenVPN підмережі
 		echo 'server:
 interface: 10.8.0.1
 access-control: 10.8.0.1/24 allow
@@ -216,67 +217,66 @@ access-control: fd42:42:42:42::/112 allow' >>/etc/unbound/openvpn.conf
 }
 
 function installQuestions() {
-	echo "Welcome to the OpenVPN installer!"
-	echo "The git repository is available at: https://github.com/angristan/openvpn-install"
+	echo "Вітаємо в інсталяторі OpenVPN!"
 	echo ""
 
-	echo "I need to ask you a few questions before starting the setup."
-	echo "You can leave the default options and just press enter if you are ok with them."
+	echo "Перед початком встановлення надайте відповіді на декілька запитань."
+	echo "Ви можете залишити параметри за замовчуванням і просто натиснути Enter, якщо вони вам підходять."
 	echo ""
-	echo "I need to know the IPv4 address of the network interface you want OpenVPN listening to."
-	echo "Unless your server is behind NAT, it should be your public IPv4 address."
+	echo "Вкажіть IPv4 адресу мережевого інтерфейсу, який буде використовуватися OpenVPN. Зазвичай це основна IP-адреса вашого сервера."
+	echo "Якщо ваш сервер не працює за NAT, це має бути ваша публічна адреса IPv4."
 
-	# Detect public IPv4 address and pre-fill for the user
+	# Визначити загальнодоступну адресу IPv4 і попередньо заповнити для користувача
 	IP=$(ip -4 addr | sed -ne 's|^.* inet \([^/]*\)/.* scope global.*$|\1|p' | head -1)
 
 	if [[ -z $IP ]]; then
-		# Detect public IPv6 address
+		# Визначити загальнодоступну адресу IPv6
 		IP=$(ip -6 addr | sed -ne 's|^.* inet6 \([^/]*\)/.* scope global.*$|\1|p' | head -1)
 	fi
 	APPROVE_IP=${APPROVE_IP:-n}
 	if [[ $APPROVE_IP =~ n ]]; then
 		read -rp "IP address: " -e -i "$IP" IP
 	fi
-	# If $IP is a private IP address, the server must be behind NAT
+	# Якщо $IP є приватною IP-адресою, сервер має бути за NAT
 	if echo "$IP" | grep -qE '^(10\.|172\.1[6789]\.|172\.2[0-9]\.|172\.3[01]\.|192\.168)'; then
 		echo ""
-		echo "It seems this server is behind NAT. What is its public IPv4 address or hostname?"
-		echo "We need it for the clients to connect to the server."
+		echo "Здається, цей сервер знаходиться за NAT. Яка його публічна адреса IPv4 або ім’я хоста?"
+		echo "Це потрібно для можливості підключення клієнтів до сервера."
 
 		PUBLICIP=$(curl -s https://api.ipify.org)
 		until [[ $ENDPOINT != "" ]]; do
-			read -rp "Public IPv4 address or hostname: " -e -i "$PUBLICIP" ENDPOINT
+			read -rp "Публічна IPv4 адреса чи хостнейм: " -e -i "$PUBLICIP" ENDPOINT
 		done
 	fi
 
 	echo ""
-	echo "Checking for IPv6 connectivity..."
+	echo "Перевірка підключення IPv6..."
 	echo ""
-	# "ping6" and "ping -6" availability varies depending on the distribution
+	# "ping6" та "ping -6" доступність залежить від того, чи це дозволено
 	if type ping6 >/dev/null 2>&1; then
 		PING6="ping6 -c3 ipv6.google.com > /dev/null 2>&1"
 	else
 		PING6="ping -6 -c3 ipv6.google.com > /dev/null 2>&1"
 	fi
 	if eval "$PING6"; then
-		echo "Your host appears to have IPv6 connectivity."
+		echo "Схоже, ваш хост має з’єднання IPv6."
 		SUGGESTION="y"
 	else
-		echo "Your host does not appear to have IPv6 connectivity."
+		echo "Схоже, ваш хост не має з’єднання IPv6."
 		SUGGESTION="n"
 	fi
 	echo ""
-	# Ask the user if they want to enable IPv6 regardless its availability.
+	# Запитайте користувача, чи хоче він увімкнути IPv6 незалежно від його доступності.
 	until [[ $IPV6_SUPPORT =~ (y|n) ]]; do
-		read -rp "Do you want to enable IPv6 support (NAT)? [y/n]: " -e -i $SUGGESTION IPV6_SUPPORT
+		read -rp "Бажаєте ввімкнути підтримку IPv6 (NAT)? [y/n]: " -e -i $SUGGESTION IPV6_SUPPORT
 	done
 	echo ""
-	echo "What port do you want OpenVPN to listen to?"
-	echo "   1) Default: 1194"
-	echo "   2) Custom"
-	echo "   3) Random [49152-65535]"
+	echo "Який порт ви хочете слухати для OpenVPN?"
+	echo "   1) Стандартний: 1194"
+	echo "   2) Власний"
+	echo "   3) Випадковий [49152-65535]"
 	until [[ $PORT_CHOICE =~ ^[1-3]$ ]]; do
-		read -rp "Port choice [1-3]: " -e -i 1 PORT_CHOICE
+		read -rp "Вибір порта [1-3]: " -e -i 1 PORT_CHOICE
 	done
 	case $PORT_CHOICE in
 	1)
@@ -284,22 +284,22 @@ function installQuestions() {
 		;;
 	2)
 		until [[ $PORT =~ ^[0-9]+$ ]] && [ "$PORT" -ge 1 ] && [ "$PORT" -le 65535 ]; do
-			read -rp "Custom port [1-65535]: " -e -i 1194 PORT
+			read -rp "Власний порт [1-65535]: " -e -i 1194 PORT
 		done
 		;;
 	3)
-		# Generate random number within private ports range
+		# Генеруємо випадкове число в діапазоні приватних портів
 		PORT=$(shuf -i49152-65535 -n1)
-		echo "Random Port: $PORT"
+		echo "Випадковий порт: $PORT"
 		;;
 	esac
 	echo ""
-	echo "What protocol do you want OpenVPN to use?"
-	echo "UDP is faster. Unless it is not available, you shouldn't use TCP."
+	echo "Який протокол буде використовуватись для OpenVPN?"
+	echo "UDP є швидшим. Якщо він недоступний, ви не повинні використовувати TCP."
 	echo "   1) UDP"
 	echo "   2) TCP"
 	until [[ $PROTOCOL_CHOICE =~ ^[1-2]$ ]]; do
-		read -rp "Protocol [1-2]: " -e -i 1 PROTOCOL_CHOICE
+		read -rp "Протокол [1-2]: " -e -i 1 PROTOCOL_CHOICE
 	done
 	case $PROTOCOL_CHOICE in
 	1)
@@ -310,35 +310,35 @@ function installQuestions() {
 		;;
 	esac
 	echo ""
-	echo "What DNS resolvers do you want to use with the VPN?"
-	echo "   1) Current system resolvers (from /etc/resolv.conf)"
-	echo "   2) Self-hosted DNS Resolver (Unbound)"
-	echo "   3) Cloudflare (Anycast: worldwide)"
-	echo "   4) Quad9 (Anycast: worldwide)"
-	echo "   5) Quad9 uncensored (Anycast: worldwide)"
-	echo "   6) FDN (France)"
-	echo "   7) DNS.WATCH (Germany)"
-	echo "   8) OpenDNS (Anycast: worldwide)"
-	echo "   9) Google (Anycast: worldwide)"
-	echo "   10) Yandex Basic (Russia)"
-	echo "   11) AdGuard DNS (Anycast: worldwide)"
-	echo "   12) NextDNS (Anycast: worldwide)"
-	echo "   13) Custom"
+	echo "Який DNS-сервер ви хочете використовувати для VPN?"
+	echo "   1) Поточний, встановлений в системі (from /etc/resolv.conf)"
+	echo "   2) Власний DNS Resolver (Unbound)"
+	echo "   3) Cloudflare (Будь-який: у всьому світі)"
+	echo "   4) Quad9 (Будь-який: у всьому світі)"
+	echo "   5) Quad9 без цензури (Будь-який: у всьому світі)"
+	echo "   6) FDN (Франція)"
+	echo "   7) DNS.WATCH (Німеччина)"
+	echo "   8) OpenDNS (Будь-який: у всьому світі)"
+	echo "   9) Google (Будь-який: у всьому світі)"
+	echo "   10) Yandex Basic (Росія)"
+	echo "   11) AdGuard DNS (Будь-який: у всьому світі)"
+	echo "   12) NextDNS (Будь-який: у всьому світі)"
+	echo "   13) Налаштовуємий"
 	until [[ $DNS =~ ^[0-9]+$ ]] && [ "$DNS" -ge 1 ] && [ "$DNS" -le 13 ]; do
 		read -rp "DNS [1-12]: " -e -i 11 DNS
 		if [[ $DNS == 2 ]] && [[ -e /etc/unbound/unbound.conf ]]; then
 			echo ""
-			echo "Unbound is already installed."
-			echo "You can allow the script to configure it in order to use it from your OpenVPN clients"
-			echo "We will simply add a second server to /etc/unbound/unbound.conf for the OpenVPN subnet."
-			echo "No changes are made to the current configuration."
+			echo "Unbound вже встановлено."
+			echo "Ви можете дозволити скрипту налаштувати його, щоб використовувати його для ваших клієнтів OpenVPN"
+			echo "Ми просто додамо другий сервер до /etc/unbound/unbound.conf для підмережі OpenVPN."
+			echo "Жодних змін до поточної конфігурації не буде вноситись."
 			echo ""
 
 			until [[ $CONTINUE =~ (y|n) ]]; do
-				read -rp "Apply configuration changes to Unbound? [y/n]: " -e CONTINUE
+				read -rp "Застосувати зміни конфігурації до Unbound? [y/n]: " -e CONTINUE
 			done
 			if [[ $CONTINUE == "n" ]]; then
-				# Break the loop and cleanup
+				# Розірвати цикл і очистити
 				unset DNS
 				unset CONTINUE
 			fi
@@ -355,17 +355,17 @@ function installQuestions() {
 		fi
 	done
 	echo ""
-	echo "Do you want to use compression? It is not recommended since the VORACLE attack makes use of it."
+	echo "Бажаєте використовувати стиснення? Не рекомендується, оскільки атака VORACLE може його використовувати."
 	until [[ $COMPRESSION_ENABLED =~ (y|n) ]]; do
-		read -rp"Enable compression? [y/n]: " -e -i n COMPRESSION_ENABLED
+		read -rp"Ввімкнути стиснення? [y/n]: " -e -i n COMPRESSION_ENABLED
 	done
 	if [[ $COMPRESSION_ENABLED == "y" ]]; then
-		echo "Choose which compression algorithm you want to use: (they are ordered by efficiency)"
+		echo "Виберіть алгоритм стиснення, який ви хочете використовувати: (вони впорядковані за ефективністю)"
 		echo "   1) LZ4-v2"
 		echo "   2) LZ4"
 		echo "   3) LZ0"
 		until [[ $COMPRESSION_CHOICE =~ ^[1-3]$ ]]; do
-			read -rp"Compression algorithm [1-3]: " -e -i 1 COMPRESSION_CHOICE
+			read -rp"Алгоритм стиснення [1-3]: " -e -i 1 COMPRESSION_CHOICE
 		done
 		case $COMPRESSION_CHOICE in
 		1)
@@ -380,9 +380,9 @@ function installQuestions() {
 		esac
 	fi
 	echo ""
-	echo "Do you want to customize encryption settings?"
-	echo "Unless you know what you're doing, you should stick with the default parameters provided by the script."
-	echo "Note that whatever you choose, all the choices presented in the script are safe. (Unlike OpenVPN's defaults)"
+	echo "Ви хочете налаштувати параметри шифрування?"
+	echo "Якщо ви не знаєте, що робите, вам слід дотримуватися стандартних параметрів, наданих скриптом встановлення."
+	echo "Зауважте, що б ви не вибрали, усі варіанти, представлені в сценарії, безпечні. (Unlike OpenVPN's defaults)"
 	echo "See https://github.com/angristan/openvpn-install#security-and-encryption to learn more."
 	echo ""
 	until [[ $CUSTOMIZE_ENC =~ (y|n) ]]; do
